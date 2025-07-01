@@ -86,7 +86,7 @@ function selectConversation(phoneNumber) {
     const contactName = contact ? contact.name : phoneNumber;
     
     currentConversationTitle.textContent = contactName;
-    currentConversationStatus.textContent = 'Online';
+    currentConversationStatus.textContent = phoneNumber;
     
     // Load messages for this conversation
     loadMessagesForConversation(phoneNumber);
