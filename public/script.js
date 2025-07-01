@@ -2,7 +2,7 @@
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 const chatMessages = document.getElementById('chatMessages');
-
+const messageRepository = new MessageRepository();
 
 function addMessage(text, isSent = true) {
     const messageDiv = document.createElement('div');
@@ -85,9 +85,11 @@ function handleDrop(e) {
             
             const reader = new FileReader();
             reader.onload = function(e) {
-                const msg = VmgMessage.parse(e.target.result);
+                const msg = VmgMessage.parse(e.target.result, file.name, VmgMessageType.INCOMING);
 
-                addMessage(msg.message, msg.type === VmgMessageType.OUTGOING);
+                messageRepository.saveMessage(msg);
+                console.log(msg);
+                loadMessages();
             };
             
             reader.onerror = function() {
@@ -101,6 +103,13 @@ function handleDrop(e) {
     }
 }
 
+function loadMessages() {
+    const messages = messageRepository.getAllMessages();
+    console.log(messages);
+    for (const msg of messages) {
+        addMessage(msg.message, msg.type === VmgMessageType.OUTGOING);
+    }
+}
 
 
 // Event listeners
@@ -117,3 +126,4 @@ function sendNotification(message) {
 
 // Initialize drag and drop
 setupDragAndDrop(); 
+loadMessages();

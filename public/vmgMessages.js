@@ -5,7 +5,8 @@ const VmgMessageType = {
 };
 
 class VmgMessage {
-    constructor(message = null, sender = null, receiver = null, datetime = null, nkdatetime = null, filename = null, type = VmgMessageType.INCOMING) {
+    constructor(id, message = null, sender = null, receiver = null, datetime = null, nkdatetime = null, filename = null, type = VmgMessageType.INCOMING) {
+        this.id = id;
         this.message = message;
         this.sender = sender;
         this.receiver = receiver;
@@ -15,7 +16,7 @@ class VmgMessage {
         this.filename = filename;
     }
 
-    static parse(content = "", type = VmgMessageType.INCOMING) {
+    static parse(content = "", filename = null, type = VmgMessageType.INCOMING) {
         const pattern = new RegExp(
             'X-NOK-DT:(?<nkdatetime>[^\\r\\n]+)\\r?\\n' +
             '(?:.*?\\r?\\n)*?' +
@@ -67,7 +68,7 @@ class VmgMessage {
 
         const message = matches.groups.message;
 
-        return new VmgMessage(message, sender, receiver, datetime, nkdatetime, filename, type);
+        return new VmgMessage(null, message, sender, receiver, datetime, nkdatetime, filename, type);
     }
 
 
