@@ -1,0 +1,21 @@
+{
+  "name": "vmg-thread-viewer",
+  "version": "1.0.0",
+  "description": "VMG message viewer ",
+  "keywords": [
+    "vmg",
+    "viewer"
+  ],
+  "license": "ISC",
+  "author": "adrfrank@outlook.com",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "npm test"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

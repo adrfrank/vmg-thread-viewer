@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VMG Thread Viewer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <div class="header-left">
+                <div class="avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="contact-info">
+                    <h3>VMG Thread Viewer</h3>
+                    <span class="status-text">Online</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="header-btn"><i class="fas fa-search"></i></button>
+                <button class="header-btn"><i class="fas fa-ellipsis-v"></i></button>
+            </div>
+        </div>
+
+        <!-- Chat Messages Area -->
+        <div class="chat-messages" id="chatMessages">
+            <!-- Messages will be dynamically added here -->
+            <div class="message received">
+                <div class="message-content">
+                    <p>Welcome to VMG Thread Viewer! 👋</p>
+                    <span class="message-time">12:00 PM</span>
+                </div>
+            </div>
+            
+            <div class="message sent">
+                <div class="message-content">
+                    <p>Hello! I'm ready to view VMG messages.</p>
+                    <span class="message-time">12:01 PM</span>
+                </div>
+            </div>
+            
+            <div class="message received">
+                <div class="message-content">
+                    <p>Great! You can start by uploading your VMG file or connecting to a data source.</p>
+                    <span class="message-time">12:02 PM</span>
+                </div>
+            </div>
+            
+            <div class="message received">
+                <div class="message-content">
+                    <p>This interface will display your conversations in a familiar chat format.</p>
+                    <span class="message-time">12:02 PM</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Input Area -->
+        <div class="chat-input">
+            <div class="input-container">
+                <button class="input-btn"><i class="fas fa-paperclip"></i></button>
+                <div class="message-input-wrapper">
+                    <input type="text" id="messageInput" placeholder="Type a message..." class="message-input">
+                </div>
+                <button class="input-btn emoji-btn"><i class="far fa-smile"></i></button>
+                <button class="input-btn send-btn" id="sendBtn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
