@@ -3,6 +3,7 @@ const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 const chatMessages = document.getElementById('chatMessages');
 
+
 function addMessage(text, isSent = true) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
@@ -76,44 +77,31 @@ function handleDrop(e) {
     const dt = e.dataTransfer;
     const files = dt.files;
     
-    if (files.length > 0) {
-        const file = files[0];
+    for (const file of files) {
         
         // Check if it's a text file
         if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.vmg')) {
-            addMessage(`📁 File dropped: ${file.name}`, false);
+            sendNotification(`📁 File dropped: ${file.name}`);
             
             const reader = new FileReader();
             reader.onload = function(e) {
-                const content = e.target.result;
-                
-                // Log the content to console
-                console.log('=== File Content ===');
-                console.log('Filename:', file.name);
-                console.log('File size:', file.size, 'bytes');
-                console.log('Content:');
-                console.log(content);
-                console.log('===================');
-                
-                // Add a message showing the file was processed
-                addMessage(`✅ File "${file.name}" processed successfully! Check the console for content.`, false);
-                
-                // You can also display a preview of the content in the chat
-                const preview = content.length > 200 ? content.substring(0, 200) + '...' : content;
-                addMessage(`📄 Preview: ${preview}`, false);
+                const msg = VmgMessage.parse(e.target.result);
+
+                addMessage(msg.message, msg.type === VmgMessageType.OUTGOING);
             };
             
             reader.onerror = function() {
-                addMessage(`❌ Error reading file: ${file.name}`, false);
-                console.error('Error reading file:', file.name);
+                sendNotification(`❌ Error reading file: ${file.name}`);
             };
             
-            reader.readAsText(file);
+            reader.readAsText(file, 'utf-16');
         } else {
-            addMessage(`❌ Please drop a text file (.txt, .vmg, or plain text). Received: ${file.type}`, false);
+            sendNotification(`❌ Please drop a text file (.txt, .vmg, or plain text). Received: ${file.type}`, false);
         }
     }
 }
+
+
 
 // Event listeners
 sendBtn.addEventListener('click', sendMessage);
@@ -122,6 +110,10 @@ messageInput.addEventListener('keypress', (e) => {
         sendMessage();
     }
 });
+
+function sendNotification(message) {
+    console.log(message);
+}
 
 // Initialize drag and drop
 setupDragAndDrop(); 
