@@ -8,55 +8,75 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="chat-container">
-        <!-- Chat Header -->
-        <div class="chat-header">
-            <div class="header-left">
-                <div class="avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="contact-info">
-                    <h3>VMG Thread Viewer</h3>
-                    <span class="status-text">Online</span>
-                </div>
-            </div>
-            <div class="header-right">
-                <button class="header-btn"><i class="fas fa-search"></i></button>
-                <button class="header-btn"><i class="fas fa-ellipsis-v"></i></button>
-            </div>
-        </div>
-
-        <!-- Chat Messages Area -->
-        <div class="chat-messages" id="chatMessages">
-            <!-- Messages will be dynamically added here -->
-            <div class="message received">
-                <div class="message-content">
-                    <p>Welcome to VMG Thread Viewer! 👋</p>
-                    <span class="message-time">12:00 PM</span>
-                </div>
-            </div>
-            
-            <div class="message sent">
-                <div class="message-content">
-                    <p>Hello! I'm ready to view VMG messages.</p>
-                    <span class="message-time">12:01 PM</span>
-                </div>
-            </div>
-            
-            
-        </div>
-
-        <!-- Chat Input Area -->
-        <div class="chat-input">
-            <div class="input-container">
-                <button class="input-btn"><i class="fas fa-paperclip"></i></button>
-                <div class="message-input-wrapper">
-                    <input type="text" id="messageInput" placeholder="Type a message..." class="message-input">
-                </div>
-                <button class="input-btn emoji-btn"><i class="far fa-smile"></i></button>
-                <button class="input-btn send-btn" id="sendBtn">
-                    <i class="fas fa-paper-plane"></i>
+    <div class="app-container">
+        <!-- Conversation Panel -->
+        <div class="conversation-panel">
+            <div class="conversation-header">
+                <h3><i class="fas fa-comments"></i> Conversations</h3>
+                <button class="refresh-btn" id="refreshConversations">
+                    <i class="fas fa-sync-alt"></i>
                 </button>
+            </div>
+            <div class="conversation-list" id="conversationList">
+                <!-- Conversations will be dynamically added here -->
+                <div class="conversation-item placeholder">
+                    <div class="conversation-info">
+                        <p>No conversations yet</p>
+                        <span>Drop VMG files to get started</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="header-left">
+                    <div class="avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="contact-info">
+                        <h3 id="currentConversationTitle">VMG Thread Viewer</h3>
+                        <span class="status-text" id="currentConversationStatus">Select a conversation</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="header-btn"><i class="fas fa-search"></i></button>
+                    <button class="header-btn"><i class="fas fa-ellipsis-v"></i></button>
+                </div>
+            </div>
+
+            <!-- Chat Messages Area -->
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be dynamically added here -->
+                <div class="message received">
+                    <div class="message-content">
+                        <p>Welcome to VMG Thread Viewer! 👋</p>
+                        <span class="message-time">12:00 PM</span>
+                    </div>
+                </div>
+                
+                <div class="message sent">
+                    <div class="message-content">
+                        <p>Select a conversation from the left panel to view messages.</p>
+                        <span class="message-time">12:01 PM</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input Area -->
+            <div class="chat-input">
+                <div class="input-container">
+                    <button class="input-btn"><i class="fas fa-paperclip"></i></button>
+                    <div class="message-input-wrapper">
+                        <input type="text" id="messageInput" placeholder="Type a message..." class="message-input">
+                    </div>
+                    <button class="input-btn emoji-btn"><i class="far fa-smile"></i></button>
+                    <button class="input-btn send-btn" id="sendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

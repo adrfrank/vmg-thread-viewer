@@ -55,7 +55,7 @@ class MessageRepository {
         // Extract phone numbers and save contacts
         const phoneNumbers = this.extractPhoneNumbers(message);
         phoneNumbers.forEach(number => {
-            this.saveContact(number);
+            this.saveContact(number, message.filename.split('_')[0]);
         });
 
         // Save conversation
