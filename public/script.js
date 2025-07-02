@@ -771,6 +771,107 @@ function importDataToRepository(importData) {
     }
 }
 
+// Dropdown menu functionality
+const conversationMenuBtn = document.getElementById('conversationMenuBtn');
+const conversationMenu = document.getElementById('conversationMenu');
+const deleteConversationBtn = document.getElementById('deleteConversationBtn');
+
+// Toggle dropdown menu
+function toggleConversationMenu() {
+    conversationMenu.classList.toggle('show');
+}
+
+// Close dropdown menu
+function closeConversationMenu() {
+    conversationMenu.classList.remove('show');
+}
+
+// Delete current conversation
+function deleteCurrentConversation() {
+    if (!currentConversation) {
+        showToast('❌ No conversation selected to delete.', 'error');
+        return;
+    }
+
+    // Get conversation info for confirmation
+    const contacts = messageRepository.getAllContacts();
+    const contact = contacts.find(c => c.number === currentConversation);
+    const contactName = contact ? contact.name : currentConversation;
+    
+    // Show confirmation dialog
+    if (confirm(`Are you sure you want to delete the conversation with "${contactName}"?\n\nThis will permanently delete all messages in this conversation. This action cannot be undone.`)) {
+        try {
+            // Delete the conversation
+            messageRepository.deleteConversation(currentConversation);
+            
+            // Clear current conversation
+            currentConversation = null;
+            
+            // Update UI
+            currentConversationTitle.textContent = 'VMG Thread Viewer';
+            currentConversationStatus.textContent = 'Select a conversation';
+            
+            // Clear chat messages
+            chatMessages.innerHTML = `
+                <div class="message received">
+                    <div class="message-content">
+                        <p>Welcome to VMG Thread Viewer! 👋</p>
+                        <span class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                </div>
+                
+                <div class="message sent">
+                    <div class="message-content">
+                        <p>Select a conversation from the left panel to view messages.</p>
+                        <span class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Refresh conversations list
+            renderConversations();
+            
+            // Update storage stats
+            updateStorageStats();
+            
+            // Show success notification
+            showToast(`✅ Conversation with "${contactName}" has been deleted.`, 'success');
+            
+        } catch (error) {
+            console.error('Error deleting conversation:', error);
+            showToast('❌ Error deleting conversation. Please try again.', 'error');
+        }
+    }
+    
+    // Close the dropdown
+    closeConversationMenu();
+}
+
+// Event listeners for dropdown menu
+conversationMenuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleConversationMenu();
+});
+
+deleteConversationBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteCurrentConversation();
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    if (!conversationMenuBtn.contains(e.target) && !conversationMenu.contains(e.target)) {
+        closeConversationMenu();
+    }
+});
+
+// Close dropdown with Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeConversationMenu();
+    }
+});
+
 // Event listeners
 refreshConversationsBtn.addEventListener('click', () => {
     renderConversations();

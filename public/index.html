@@ -115,8 +115,18 @@
                     </div>
                 </div>
                 <div class="header-right">
-                    <button class="header-btn"><i class="fas fa-search"></i></button>
-                    <button class="header-btn"><i class="fas fa-ellipsis-v"></i></button>
+                    <!-- <button class="header-btn"><i class="fas fa-search"></i></button> -->
+                    <div class="dropdown-container">
+                        <button class="header-btn" id="conversationMenuBtn">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="dropdown-menu" id="conversationMenu">
+                            <button class="dropdown-item" id="deleteConversationBtn">
+                                <i class="fas fa-trash"></i>
+                                Delete Conversation
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
