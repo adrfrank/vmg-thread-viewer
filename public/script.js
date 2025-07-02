@@ -7,6 +7,12 @@ const refreshConversationsBtn = document.getElementById('refreshConversations');
 const currentConversationTitle = document.getElementById('currentConversationTitle');
 const currentConversationStatus = document.getElementById('currentConversationStatus');
 
+// Progress bar elements
+const progressContainer = document.getElementById('progressContainer');
+const progressBar = document.getElementById('progressBar');
+const progressText = document.getElementById('progressText');
+const currentFile = document.getElementById('currentFile');
+
 // Settings panel elements
 const settingsBtn = document.getElementById('settingsBtn');
 const settingsPanel = document.getElementById('settingsPanel');
@@ -18,6 +24,24 @@ const totalContactsEl = document.getElementById('totalContacts');
 
 const messageRepository = new MessageRepository();
 let currentConversation = null;
+
+// Progress bar functions
+function showProgressBar() {
+    progressContainer.classList.add('show');
+}
+
+function hideProgressBar() {
+    progressContainer.classList.remove('show');
+}
+
+function updateProgress(current, total, fileName = '') {
+    const percentage = total > 0 ? (current / total) * 100 : 0;
+    progressBar.style.width = `${percentage}%`;
+    progressText.textContent = `${current} / ${total} files processed`;
+    if (fileName) {
+        currentFile.textContent = `Processing: ${fileName}`;
+    }
+}
 
 // Conversation management
 function renderConversations() {
@@ -291,60 +315,91 @@ function handleDrop(e) {
     const dt = e.dataTransfer;
     const files = dt.files;
     
+    if (files.length === 0) return;
+    
+    // Filter valid files
+    const validFiles = Array.from(files).filter(file => 
+        file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.vmg')
+    );
+    
+    if (validFiles.length === 0) {
+        showToast('❌ No valid VMG files found', 'error', 4000);
+        return;
+    }
+    
+    // Show progress bar
+    showProgressBar();
+    updateProgress(0, validFiles.length, 'Starting...');
+    
     let loadedCount = 0;
     let errorCount = 0;
-    const totalFiles = files.length;
+    const totalFiles = validFiles.length;
     
-    for (const file of files) {
-        // Check if it's a text file
-        if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.vmg')) {
-            //showToast(`📁 Loading file: ${file.name}`, 'info', 2000);
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const msg = VmgMessage.parse(e.target.result, file.name, VmgMessageType.INCOMING);
-                    messageRepository.saveMessage(msg);
-                    loadedCount++;
-                    
-                    if (!currentConversation) {
-                        const conversationKey = messageRepository.getConversationKey(msg);
-                        selectConversation(conversationKey);
-                    }
-                    
-                    // Show success notification for individual file
-                    //showToast(`✅ Successfully loaded: ${file.name}`, 'success', 3000);
-                    
-                    // Show summary notification when all files are processed
-                    if (loadedCount + errorCount === totalFiles) {
-                        if (loadedCount > 0) {
-                            showToast(`🎉 Successfully loaded ${loadedCount} file${loadedCount > 1 ? 's' : ''}!`, 'success', 4000);
-                        }
-                        if (errorCount > 0) {
-                            showToast(`⚠️ Failed to load ${errorCount} file${errorCount > 1 ? 's' : ''}`, 'warning', 4000);
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error parsing file:', file.name, error);
-                    errorCount++;
-                    showToast(`❌ Error parsing file: ${file.name}`, 'error', 4000);
-                }
-            };
-            
-            reader.onerror = function() {
-                errorCount++;
-                showToast(`❌ Error reading file: ${file.name}`, 'error', 4000);
-            };
-            
-            reader.readAsText(file, 'utf-16');
-        } else {
-            errorCount++;
-            showToast(`❌ Invalid file type: ${file.name} (${file.type})`, 'error', 4000);
-        }
-    }
+    // Process files sequentially to show progress
+    processFilesSequentially(validFiles, 0, loadedCount, errorCount, totalFiles);
+}
 
-    // Refresh conversations and select the new one if no conversation is selected
-    renderConversations();
+function processFilesSequentially(files, index, loadedCount, errorCount, totalFiles) {
+    if (index >= files.length) {
+        // All files processed
+        hideProgressBar();
+        
+        // Show summary notifications
+        if (loadedCount > 0) {
+            showToast(`🎉 Successfully loaded ${loadedCount} file${loadedCount > 1 ? 's' : ''}!`, 'success', 4000);
+        }
+        if (errorCount > 0) {
+            showToast(`⚠️ Failed to load ${errorCount} file${errorCount > 1 ? 's' : ''}`, 'warning', 4000);
+        }
+        
+        // Refresh conversations and select the new one if no conversation is selected
+        renderConversations();
+        return;
+    }
+    
+    const file = files[index];
+    updateProgress(loadedCount + errorCount, totalFiles, file.name);
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            const msg = VmgMessage.parse(e.target.result, file.name, VmgMessageType.INCOMING);
+            messageRepository.saveMessage(msg);
+            loadedCount++;
+            
+            if (!currentConversation) {
+                const conversationKey = messageRepository.getConversationKey(msg);
+                selectConversation(conversationKey);
+            }
+            
+            // Process next file
+            setTimeout(() => {
+                processFilesSequentially(files, index + 1, loadedCount, errorCount, totalFiles);
+            }, 100); // Small delay to show progress
+            
+        } catch (error) {
+            console.error('Error parsing file:', file.name, error);
+            errorCount++;
+            
+            // Process next file
+            setTimeout(() => {
+                processFilesSequentially(files, index + 1, loadedCount, errorCount, totalFiles);
+            }, 100);
+        }
+    };
+    
+    reader.onerror = function() {
+        console.error('Error reading file:', file.name);
+        errorCount++;
+        
+        // Process next file
+        setTimeout(() => {
+            processFilesSequentially(files, index + 1, loadedCount, errorCount, totalFiles);
+        }, 100);
+    };
+    
+    reader.readAsText(file, 'utf-16');
 }
 
 // Settings Panel Functions

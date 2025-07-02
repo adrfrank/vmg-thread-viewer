@@ -832,4 +832,124 @@ body {
         min-width: auto;
         max-width: none;
     }
+}
+
+/* Progress Bar Styles */
+.progress-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.progress-container.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.progress-content {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    min-width: 400px;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: progressSlideIn 0.3s ease-out;
+}
+
+@keyframes progressSlideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.progress-header h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #075e54;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progress-text {
+    font-size: 14px;
+    color: #667781;
+    font-weight: 500;
+}
+
+.progress-bar-wrapper {
+    background: #e0e0e0;
+    border-radius: 8px;
+    height: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #25d366, #128c7e);
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 8px;
+}
+
+.progress-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.current-file {
+    font-size: 13px;
+    color: #667781;
+    font-style: italic;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Mobile responsive for progress bar */
+@media (max-width: 768px) {
+    .progress-content {
+        min-width: 300px;
+        margin: 20px;
+        padding: 20px;
+    }
+    
+    .progress-header {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+    
+    .progress-header h4 {
+        font-size: 16px;
+    }
+    
+    .progress-text {
+        font-size: 12px;
+    }
 } 
