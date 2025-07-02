@@ -349,67 +349,99 @@ body {
 }
 
 /* Chat Input Area */
-.chat-input {
+/* Message Drop Zones */
+.message-drop-zones {
     background: #f0f0f0;
-    padding: 10px 16px;
+    padding: 16px;
     border-top: 1px solid #e0e0e0;
-}
-
-.input-container {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    background: white;
-    border-radius: 8px;
-    padding: 8px 12px;
-    border: 1px solid #e0e0e0;
+    gap: 12px;
+    height: 140px;
 }
 
-.message-input-wrapper {
+.drop-zone {
     flex: 1;
-}
-
-.message-input {
-    width: 100%;
-    border: none;
-    outline: none;
-    font-size: 15px;
-    line-height: 20px;
-    max-height: 100px;
-    resize: none;
-    font-family: inherit;
-}
-
-.message-input::placeholder {
-    color: #667781;
-}
-
-.input-btn {
-    background: none;
-    border: none;
-    padding: 8px;
-    border-radius: 50%;
-    cursor: pointer;
-    color: #54656f;
-    transition: background-color 0.2s;
+    border: 2px dashed #c1c1c1;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    background: white;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
 }
 
-.input-btn:hover {
-    background: #f0f0f0;
+.drop-zone:hover {
+    border-color: #008069;
+    background: #f8f9fa;
 }
 
-.send-btn {
-    background: #008069 !important;
-    color: white !important;
+.drop-zone.drag-over {
+    border-color: #008069;
+    background: #e8f5e8;
+    transform: scale(1.02);
 }
 
-.send-btn:hover {
-    background: #007a63 !important;
+.incoming-drop-zone {
+    border-color: #25d366;
+}
+
+.incoming-drop-zone:hover,
+.incoming-drop-zone.drag-over {
+    border-color: #128c7e;
+    background: #e8f5e8;
+}
+
+.outgoing-drop-zone {
+    border-color: #008069;
+}
+
+.outgoing-drop-zone:hover,
+.outgoing-drop-zone.drag-over {
+    border-color: #075e54;
+    background: #e8f5e8;
+}
+
+.drop-zone-content {
+    text-align: center;
+    padding: 20px;
+    pointer-events: none;
+}
+
+.drop-zone-icon {
+    font-size: 24px;
+    color: #667781;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.incoming-drop-zone .drop-zone-icon {
+    color: #25d366;
+}
+
+.outgoing-drop-zone .drop-zone-icon {
+    color: #008069;
+}
+
+.drop-zone-content h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #303030;
+    margin-bottom: 4px;
+}
+
+.drop-zone-content p {
+    font-size: 12px;
+    color: #667781;
+    margin-bottom: 4px;
+}
+
+.drop-zone-hint {
+    font-size: 10px;
+    color: #999;
+    display: block;
 }
 
 /* Scrollbar Styling */
@@ -571,8 +603,27 @@ body {
         padding: 8px 12px;
     }
     
-    .chat-input {
-        padding: 8px 12px;
+    .message-drop-zones {
+        padding: 12px;
+        height: 100px;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .drop-zone-content {
+        padding: 12px;
+    }
+    
+    .drop-zone-content h4 {
+        font-size: 12px;
+    }
+    
+    .drop-zone-content p {
+        font-size: 10px;
+    }
+    
+    .drop-zone-hint {
+        font-size: 9px;
     }
     
     /* Settings panel responsive */

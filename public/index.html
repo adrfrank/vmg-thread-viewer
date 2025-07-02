@@ -113,17 +113,23 @@
                 </div>
             </div>
 
-            <!-- Chat Input Area -->
-            <div class="chat-input">
-                <div class="input-container">
-                    <button class="input-btn"><i class="fas fa-paperclip"></i></button>
-                    <div class="message-input-wrapper">
-                        <input type="text" id="messageInput" placeholder="Type a message..." class="message-input">
+            <!-- Message Drop Zones -->
+            <div class="message-drop-zones">
+                <div class="drop-zone incoming-drop-zone" id="incomingDropZone">
+                    <div class="drop-zone-content">
+                        <i class="fas fa-download drop-zone-icon"></i>
+                        <h4>Incoming Messages</h4>
+                        <p>Drop VMG files for incoming messages here</p>
+                        <span class="drop-zone-hint">Supports .vmg and .txt files</span>
                     </div>
-                    <button class="input-btn emoji-btn"><i class="far fa-smile"></i></button>
-                    <button class="input-btn send-btn" id="sendBtn">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
+                </div>
+                <div class="drop-zone outgoing-drop-zone" id="outgoingDropZone">
+                    <div class="drop-zone-content">
+                        <i class="fas fa-upload drop-zone-icon"></i>
+                        <h4>Outgoing Messages</h4>
+                        <p>Drop VMG files for outgoing messages here</p>
+                        <span class="drop-zone-hint">Supports .vmg and .txt files</span>
+                    </div>
                 </div>
             </div>
         </div>

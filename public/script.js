@@ -1,11 +1,11 @@
 // Global variables
-const messageInput = document.getElementById('messageInput');
-const sendBtn = document.getElementById('sendBtn');
 const chatMessages = document.getElementById('chatMessages');
 const conversationList = document.getElementById('conversationList');
 const refreshConversationsBtn = document.getElementById('refreshConversations');
 const currentConversationTitle = document.getElementById('currentConversationTitle');
 const currentConversationStatus = document.getElementById('currentConversationStatus');
+const incomingDropZone = document.getElementById('incomingDropZone');
+const outgoingDropZone = document.getElementById('outgoingDropZone');
 
 // Progress bar elements
 const progressContainer = document.getElementById('progressContainer');
@@ -230,47 +230,134 @@ function addDateSeparator(date) {
     chatMessages.appendChild(separatorDiv);
 }
 
-// Simple message sending functionality (for demo purposes)
-function addMessage(text, isSent = true) {
-    if (!currentConversation) {
-        alert('Please select a conversation first');
+// Drop zone functionality for incoming and outgoing messages
+function setupDropZones() {
+    // Setup incoming drop zone
+    setupDropZone(incomingDropZone, VmgMessageType.INCOMING);
+    
+    // Setup outgoing drop zone
+    setupDropZone(outgoingDropZone, VmgMessageType.OUTGOING);
+}
+
+function setupDropZone(dropZone, messageType) {
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    // Highlight drop area when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => highlightDropZone(dropZone), false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => unhighlightDropZone(dropZone), false);
+    });
+    
+    // Handle dropped files
+    dropZone.addEventListener('drop', (e) => handleDropZoneDrop(e, messageType), false);
+}
+
+function highlightDropZone(dropZone) {
+    dropZone.classList.add('drag-over');
+}
+
+function unhighlightDropZone(dropZone) {
+    dropZone.classList.remove('drag-over');
+}
+
+function handleDropZoneDrop(e, messageType) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    
+    if (files.length === 0) return;
+    
+    // Filter valid files
+    const validFiles = Array.from(files).filter(file => 
+        file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.vmg')
+    );
+    
+    if (validFiles.length === 0) {
+        const typeText = messageType === VmgMessageType.INCOMING ? 'incoming' : 'outgoing';
+        showToast(`❌ No valid VMG files found for ${typeText} messages`, 'error', 4000);
         return;
     }
     
-    const now = new Date();
+    // Show progress bar
+    showProgressBar();
+    updateProgress(0, validFiles.length, 'Starting...');
     
-    // Add date separator if this is the first message or if day changed
-    const lastMessage = chatMessages.lastElementChild;
-    if (!lastMessage || lastMessage.classList.contains('date-separator')) {
-        addDateSeparator(now);
-    } else {
-        const lastMessageTime = lastMessage.querySelector('.message-time');
-        if (lastMessageTime) {
-            // This is a simplified check - in a real app you'd store the actual date
-            const lastDate = new Date(); // This would be the actual last message date
-            if (!isSameDay(lastDate, now)) {
-                addDateSeparator(now);
-            }
-        }
-    }
+    let loadedCount = 0;
+    let errorCount = 0;
+    const totalFiles = validFiles.length;
     
-    addMessageToChat(text, isSent, now);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    // Process files sequentially to show progress
+    processDropZoneFiles(validFiles, 0, loadedCount, errorCount, totalFiles, messageType);
 }
 
-function sendMessage() {
-    const text = messageInput.value.trim();
-    if (text && currentConversation) {
-        addMessage(text, true);
-        messageInput.value = '';
+function processDropZoneFiles(files, index, loadedCount, errorCount, totalFiles, messageType) {
+    if (index >= files.length) {
+        // All files processed
+        hideProgressBar();
         
-        // Simulate a response after 1 second
-        setTimeout(() => {
-            addMessage('Message received! This is where VMG thread data would appear.', false);
-        }, 1000);
-    } else if (!currentConversation) {
-        alert('Please select a conversation first');
+        const typeText = messageType === VmgMessageType.INCOMING ? 'incoming' : 'outgoing';
+        
+        // Show summary notifications
+        if (loadedCount > 0) {
+            showToast(`🎉 Successfully loaded ${loadedCount} ${typeText} message file${loadedCount > 1 ? 's' : ''}!`, 'success', 4000);
+        }
+        if (errorCount > 0) {
+            showToast(`⚠️ Failed to load ${errorCount} ${typeText} message file${errorCount > 1 ? 's' : ''}`, 'warning', 4000);
+        }
+        
+        // Refresh conversations and select the new one if no conversation is selected
+        renderConversations();
+        return;
     }
+    
+    const file = files[index];
+    updateProgress(loadedCount + errorCount, totalFiles, file.name);
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            const msg = VmgMessage.parse(e.target.result, file.name, messageType);
+            messageRepository.saveMessage(msg);
+            loadedCount++;
+            
+            if (!currentConversation) {
+                const conversationKey = messageRepository.getConversationKey(msg);
+                selectConversation(conversationKey);
+            }
+            
+            // Process next file
+            setTimeout(() => {
+                processDropZoneFiles(files, index + 1, loadedCount, errorCount, totalFiles, messageType);
+            }, 100); // Small delay to show progress
+            
+        } catch (error) {
+            console.error('Error parsing file:', file.name, error);
+            errorCount++;
+            
+            // Process next file
+            setTimeout(() => {
+                processDropZoneFiles(files, index + 1, loadedCount, errorCount, totalFiles, messageType);
+            }, 100);
+        }
+    };
+    
+    reader.onerror = function() {
+        console.error('Error reading file:', file.name);
+        errorCount++;
+        
+        // Process next file
+        setTimeout(() => {
+            processDropZoneFiles(files, index + 1, loadedCount, errorCount, totalFiles, messageType);
+        }, 100);
+    };
+    
+    reader.readAsText(file, 'utf-16');
 }
 
 // Drag and Drop functionality for text files
@@ -479,13 +566,6 @@ function deleteAllConversations() {
 }
 
 // Event listeners
-sendBtn.addEventListener('click', sendMessage);
-messageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        sendMessage();
-    }
-});
-
 refreshConversationsBtn.addEventListener('click', () => {
     renderConversations();
 });
@@ -590,9 +670,10 @@ console.log('- Total conversations element:', totalConversationsEl);
 console.log('- Total contacts element:', totalContactsEl);
 
 setupDragAndDrop();
+setupDropZones();
 renderConversations();
 
 // Show welcome toast
 setTimeout(() => {
-    showToast('🚀 VMG Thread Viewer is ready! Drop VMG files to get started.', 'info', 5000);
+    showToast('🚀 VMG Thread Viewer is ready! Drop VMG files to the incoming/outgoing zones to get started.', 'info', 5000);
 }, 1000);
