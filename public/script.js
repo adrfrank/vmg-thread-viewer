@@ -291,30 +291,55 @@ function handleDrop(e) {
     const dt = e.dataTransfer;
     const files = dt.files;
     
+    let loadedCount = 0;
+    let errorCount = 0;
+    const totalFiles = files.length;
+    
     for (const file of files) {
         // Check if it's a text file
         if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.vmg')) {
-            sendNotification(`📁 File dropped: ${file.name}`);
+            //showToast(`📁 Loading file: ${file.name}`, 'info', 2000);
             
             const reader = new FileReader();
             reader.onload = function(e) {
-                const msg = VmgMessage.parse(e.target.result, file.name, VmgMessageType.INCOMING);
-
-                messageRepository.saveMessage(msg);
-                
-                if (!currentConversation) {
-                    const conversationKey = messageRepository.getConversationKey(msg);
-                    selectConversation(conversationKey);
+                try {
+                    const msg = VmgMessage.parse(e.target.result, file.name, VmgMessageType.INCOMING);
+                    messageRepository.saveMessage(msg);
+                    loadedCount++;
+                    
+                    if (!currentConversation) {
+                        const conversationKey = messageRepository.getConversationKey(msg);
+                        selectConversation(conversationKey);
+                    }
+                    
+                    // Show success notification for individual file
+                    //showToast(`✅ Successfully loaded: ${file.name}`, 'success', 3000);
+                    
+                    // Show summary notification when all files are processed
+                    if (loadedCount + errorCount === totalFiles) {
+                        if (loadedCount > 0) {
+                            showToast(`🎉 Successfully loaded ${loadedCount} file${loadedCount > 1 ? 's' : ''}!`, 'success', 4000);
+                        }
+                        if (errorCount > 0) {
+                            showToast(`⚠️ Failed to load ${errorCount} file${errorCount > 1 ? 's' : ''}`, 'warning', 4000);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error parsing file:', file.name, error);
+                    errorCount++;
+                    showToast(`❌ Error parsing file: ${file.name}`, 'error', 4000);
                 }
             };
             
             reader.onerror = function() {
-                sendNotification(`❌ Error reading file: ${file.name}`);
+                errorCount++;
+                showToast(`❌ Error reading file: ${file.name}`, 'error', 4000);
             };
             
             reader.readAsText(file, 'utf-16');
         } else {
-            sendNotification(`❌ Please drop a text file (.txt, .vmg, or plain text). Received: ${file.type}`, false);
+            errorCount++;
+            showToast(`❌ Invalid file type: ${file.name} (${file.type})`, 'error', 4000);
         }
     }
 
@@ -389,11 +414,11 @@ function deleteAllConversations() {
             closeSettingsPanel();
             
             // Show success notification
-            sendNotification('✅ All conversations have been deleted successfully');
+            showToast('✅ All conversations have been deleted successfully', 'success', 4000);
             
         } catch (error) {
             console.error('Error deleting all conversations:', error);
-            sendNotification('❌ Error deleting conversations. Please try again.');
+            showToast('❌ Error deleting conversations. Please try again.', 'error', 4000);
         }
     }
 }
@@ -447,8 +472,55 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-function sendNotification(message) {
-    console.log(message);
+// Toast notification system
+function showToast(message, type = 'success', duration = 5000) {
+    const toastContainer = document.getElementById('toastContainer');
+    
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    // Determine icon based on type
+    let icon = 'fas fa-check-circle';
+    if (type === 'error') icon = 'fas fa-exclamation-circle';
+    else if (type === 'warning') icon = 'fas fa-exclamation-triangle';
+    else if (type === 'info') icon = 'fas fa-info-circle';
+    
+    toast.innerHTML = `
+        <i class="${icon} toast-icon"></i>
+        <div class="toast-content">
+            <p class="toast-message">${message}</p>
+        </div>
+        <button class="toast-close" onclick="removeToast(this.parentElement)">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    // Add to container
+    toastContainer.appendChild(toast);
+    
+    // Auto remove after duration
+    setTimeout(() => {
+        removeToast(toast);
+    }, duration);
+    
+    return toast;
+}
+
+function removeToast(toast) {
+    if (toast && toast.parentElement) {
+        toast.classList.add('removing');
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.parentElement.removeChild(toast);
+            }
+        }, 300);
+    }
+}
+
+function sendNotification(message, isSuccess = true) {
+    const type = isSuccess ? 'success' : 'error';
+    showToast(message, type);
 }
 
 // Initialize
@@ -464,3 +536,8 @@ console.log('- Total contacts element:', totalContactsEl);
 
 setupDragAndDrop();
 renderConversations();
+
+// Show welcome toast
+setTimeout(() => {
+    showToast('🚀 VMG Thread Viewer is ready! Drop VMG files to get started.', 'info', 5000);
+}, 1000);
