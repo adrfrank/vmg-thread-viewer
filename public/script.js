@@ -7,6 +7,15 @@ const refreshConversationsBtn = document.getElementById('refreshConversations');
 const currentConversationTitle = document.getElementById('currentConversationTitle');
 const currentConversationStatus = document.getElementById('currentConversationStatus');
 
+// Settings panel elements
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsPanel = document.getElementById('settingsPanel');
+const closeSettingsBtn = document.getElementById('closeSettings');
+const deleteAllBtn = document.getElementById('deleteAllBtn');
+const totalMessagesEl = document.getElementById('totalMessages');
+const totalConversationsEl = document.getElementById('totalConversations');
+const totalContactsEl = document.getElementById('totalContacts');
+
 const messageRepository = new MessageRepository();
 let currentConversation = null;
 
@@ -292,10 +301,6 @@ function handleDrop(e) {
                 const msg = VmgMessage.parse(e.target.result, file.name, VmgMessageType.INCOMING);
 
                 messageRepository.saveMessage(msg);
-                console.log(msg);
-                
-                // Refresh conversations and select the new one if no conversation is selected
-                renderConversations();
                 
                 if (!currentConversation) {
                     const conversationKey = messageRepository.getConversationKey(msg);
@@ -312,6 +317,85 @@ function handleDrop(e) {
             sendNotification(`❌ Please drop a text file (.txt, .vmg, or plain text). Received: ${file.type}`, false);
         }
     }
+
+    // Refresh conversations and select the new one if no conversation is selected
+    renderConversations();
+}
+
+// Settings Panel Functions
+function openSettingsPanel() {
+    console.log('Opening settings panel...');
+    console.log('Settings panel element:', settingsPanel);
+    console.log('Settings panel classes:', settingsPanel.classList);
+    
+    settingsPanel.classList.add('open');
+    updateStorageStats();
+    
+    console.log('Settings panel classes after opening:', settingsPanel.classList);
+}
+
+function closeSettingsPanel() {
+    console.log('Closing settings panel...');
+    settingsPanel.classList.remove('open');
+}
+
+function updateStorageStats() {
+    console.log('Updating storage stats...');
+    const stats = messageRepository.getStats();
+    console.log('Stats:', stats);
+    
+    totalMessagesEl.textContent = stats.totalMessages;
+    totalConversationsEl.textContent = stats.totalConversations;
+    totalContactsEl.textContent = stats.totalContacts;
+}
+
+function deleteAllConversations() {
+    console.log('Delete all conversations clicked');
+    const confirmed = confirm('Are you sure you want to delete all conversations, messages, and contacts? This action cannot be undone.');
+    
+    if (confirmed) {
+        try {
+            messageRepository.clearAll();
+            
+            // Clear current conversation
+            currentConversation = null;
+            
+            // Update UI
+            renderConversations();
+            chatMessages.innerHTML = `
+                <div class="message received">
+                    <div class="message-content">
+                        <p>Welcome to VMG Thread Viewer! 👋</p>
+                        <span class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                </div>
+                
+                <div class="message sent">
+                    <div class="message-content">
+                        <p>All conversations have been deleted. Drop VMG files to get started.</p>
+                        <span class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Update header
+            currentConversationTitle.textContent = 'VMG Thread Viewer';
+            currentConversationStatus.textContent = 'Select a conversation';
+            
+            // Update settings stats
+            updateStorageStats();
+            
+            // Close settings panel
+            closeSettingsPanel();
+            
+            // Show success notification
+            sendNotification('✅ All conversations have been deleted successfully');
+            
+        } catch (error) {
+            console.error('Error deleting all conversations:', error);
+            sendNotification('❌ Error deleting conversations. Please try again.');
+        }
+    }
 }
 
 // Event listeners
@@ -326,12 +410,57 @@ refreshConversationsBtn.addEventListener('click', () => {
     renderConversations();
 });
 
+// Settings panel event listeners
+console.log('Setting up settings panel event listeners...');
+console.log('Settings button:', settingsBtn);
+console.log('Close button:', closeSettingsBtn);
+console.log('Delete all button:', deleteAllBtn);
+
+settingsBtn.addEventListener('click', () => {
+    console.log('Settings button clicked!');
+    openSettingsPanel();
+});
+
+closeSettingsBtn.addEventListener('click', () => {
+    console.log('Close button clicked!');
+    closeSettingsPanel();
+});
+
+deleteAllBtn.addEventListener('click', () => {
+    console.log('Delete all button clicked!');
+    deleteAllConversations();
+});
+
+// Close settings panel when clicking outside
+document.addEventListener('click', (e) => {
+    if (settingsPanel.classList.contains('open') && 
+        !settingsPanel.contains(e.target) && 
+        !settingsBtn.contains(e.target)) {
+        closeSettingsPanel();
+    }
+});
+
+// Close settings panel with Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && settingsPanel.classList.contains('open')) {
+        closeSettingsPanel();
+    }
+});
+
 function sendNotification(message) {
     console.log(message);
 }
 
-
-
 // Initialize
+console.log('Initializing VMG Thread Viewer...');
+console.log('Settings panel elements found:');
+console.log('- Settings button:', settingsBtn);
+console.log('- Settings panel:', settingsPanel);
+console.log('- Close button:', closeSettingsBtn);
+console.log('- Delete all button:', deleteAllBtn);
+console.log('- Total messages element:', totalMessagesEl);
+console.log('- Total conversations element:', totalConversationsEl);
+console.log('- Total contacts element:', totalContactsEl);
+
 setupDragAndDrop();
 renderConversations();

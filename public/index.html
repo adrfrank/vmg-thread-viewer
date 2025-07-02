@@ -13,9 +13,14 @@
         <div class="conversation-panel">
             <div class="conversation-header">
                 <h3><i class="fas fa-comments"></i> Conversations</h3>
-                <button class="refresh-btn" id="refreshConversations">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
+                <div class="header-actions">
+                    <button class="refresh-btn" id="refreshConversations">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="settings-btn" id="settingsBtn">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
             </div>
             <div class="conversation-list" id="conversationList">
                 <!-- Conversations will be dynamically added here -->
@@ -23,6 +28,49 @@
                     <div class="conversation-info">
                         <p>No conversations yet</p>
                         <span>Drop VMG files to get started</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div class="settings-panel" id="settingsPanel">
+            <div class="settings-header">
+                <h3><i class="fas fa-cog"></i> Settings</h3>
+                <button class="close-btn" id="closeSettings">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="settings-content">
+                <div class="settings-section">
+                    <h4>Data Management</h4>
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <h5>Delete All Conversations</h5>
+                            <p>This will permanently delete all conversations, messages, and contacts. This action cannot be undone.</p>
+                        </div>
+                        <button class="danger-btn" id="deleteAllBtn">
+                            <i class="fas fa-trash"></i>
+                            Delete All
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h4>Storage Information</h4>
+                    <div class="storage-stats" id="storageStats">
+                        <div class="stat-item">
+                            <span class="stat-label">Total Messages:</span>
+                            <span class="stat-value" id="totalMessages">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Conversations:</span>
+                            <span class="stat-value" id="totalConversations">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Contacts:</span>
+                            <span class="stat-value" id="totalContacts">0</span>
+                        </div>
                     </div>
                 </div>
             </div>
