@@ -21,6 +21,7 @@ const deleteAllBtn = document.getElementById('deleteAllBtn');
 const totalMessagesEl = document.getElementById('totalMessages');
 const totalConversationsEl = document.getElementById('totalConversations');
 const totalContactsEl = document.getElementById('totalContacts');
+const exportDataBtn = document.getElementById('exportDataBtn');
 
 const messageRepository = new MessageRepository();
 let currentConversation = null;
@@ -565,6 +566,59 @@ function deleteAllConversations() {
     }
 }
 
+function exportAllData() {
+    console.log('Export data clicked');
+    
+    try {
+        // Get all data from repository
+        const conversations = messageRepository.getAllConversations();
+        const contacts = messageRepository.getAllContacts();
+        const allMessages = messageRepository.getAllMessages();
+        
+        // Create export data structure
+        const exportData = {
+            exportInfo: {
+                timestamp: new Date().toISOString(),
+                version: '1.0',
+                source: 'VMG Thread Viewer'
+            },
+            stats: {
+                totalMessages: allMessages.length,
+                totalConversations: conversations.length,
+                totalContacts: contacts.length
+            },
+            conversations: conversations,
+            contacts: contacts,
+            messages: allMessages
+        };
+        
+        // Convert to JSON string with pretty formatting
+        const jsonString = JSON.stringify(exportData, null, 2);
+        
+        // Create blob and download
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        // Create download link
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `vmg-thread-viewer-export-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        
+        // Cleanup
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        // Show success notification
+        showToast('✅ Data exported successfully!', 'success', 4000);
+        
+    } catch (error) {
+        console.error('Error exporting data:', error);
+        showToast('❌ Error exporting data. Please try again.', 'error', 4000);
+    }
+}
+
 // Event listeners
 refreshConversationsBtn.addEventListener('click', () => {
     renderConversations();
@@ -575,6 +629,7 @@ console.log('Setting up settings panel event listeners...');
 console.log('Settings button:', settingsBtn);
 console.log('Close button:', closeSettingsBtn);
 console.log('Delete all button:', deleteAllBtn);
+console.log('Export data button:', exportDataBtn);
 
 settingsBtn.addEventListener('click', () => {
     console.log('Settings button clicked!');
@@ -589,6 +644,11 @@ closeSettingsBtn.addEventListener('click', () => {
 deleteAllBtn.addEventListener('click', () => {
     console.log('Delete all button clicked!');
     deleteAllConversations();
+});
+
+exportDataBtn.addEventListener('click', () => {
+    console.log('Export data button clicked!');
+    exportAllData();
 });
 
 // Close settings panel when clicking outside
@@ -665,6 +725,7 @@ console.log('- Settings button:', settingsBtn);
 console.log('- Settings panel:', settingsPanel);
 console.log('- Close button:', closeSettingsBtn);
 console.log('- Delete all button:', deleteAllBtn);
+console.log('- Export data button:', exportDataBtn);
 console.log('- Total messages element:', totalMessagesEl);
 console.log('- Total conversations element:', totalConversationsEl);
 console.log('- Total contacts element:', totalContactsEl);
