@@ -22,6 +22,8 @@ const totalMessagesEl = document.getElementById('totalMessages');
 const totalConversationsEl = document.getElementById('totalConversations');
 const totalContactsEl = document.getElementById('totalContacts');
 const exportDataBtn = document.getElementById('exportDataBtn');
+const importDataBtn = document.getElementById('importDataBtn');
+const importFileInput = document.getElementById('importFileInput');
 
 const messageRepository = new MessageRepository();
 let currentConversation = null;
@@ -619,6 +621,156 @@ function exportAllData() {
     }
 }
 
+function importAllData() {
+    console.log('Import data clicked');
+    
+    // Trigger file input
+    importFileInput.click();
+}
+
+function handleImportFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Reset file input
+    event.target.value = '';
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            const jsonData = JSON.parse(e.target.result);
+            
+            // Validate the JSON structure
+            if (!validateImportData(jsonData)) {
+                showToast('❌ Invalid import file format. Please use a file exported from VMG Thread Viewer.', 'error', 5000);
+                return;
+            }
+            
+            // Show warning dialog about data deletion
+            const confirmed = confirm(
+                `⚠️ WARNING: Importing this file will DELETE ALL existing data!\n\n` +
+                `This will:\n` +
+                `• Delete all current conversations, messages, and contacts\n` +
+                `• Replace with data from ${jsonData.exportInfo?.timestamp ? new Date(jsonData.exportInfo.timestamp).toLocaleString() : 'unknown date'}\n\n` +
+                `Import data:\n` +
+                `• ${jsonData.stats?.totalMessages || 0} messages\n` +
+                `• ${jsonData.stats?.totalConversations || 0} conversations\n` +
+                `• ${jsonData.stats?.totalContacts || 0} contacts\n\n` +
+                `Are you sure you want to continue? This action cannot be undone.`
+            );
+            
+            if (!confirmed) return;
+            
+            // Clear all existing data before importing
+            messageRepository.clearAll();
+            
+            // Import the data
+            importDataToRepository(jsonData);
+            
+        } catch (error) {
+            console.error('Error parsing import file:', error);
+            showToast('❌ Error reading import file. Please check if the file is valid JSON.', 'error', 5000);
+        }
+    };
+    
+    reader.onerror = function() {
+        console.error('Error reading import file');
+        showToast('❌ Error reading import file. Please try again.', 'error', 4000);
+    };
+    
+    reader.readAsText(file);
+}
+
+function validateImportData(data) {
+    // Check if it has the expected structure
+    if (!data || typeof data !== 'object') {
+        return false;
+    }
+    
+    // Check for required top-level properties
+    if (!data.conversations || !data.contacts || !data.messages) {
+        return false;
+    }
+    
+    // Check if arrays are actually arrays
+    if (!Array.isArray(data.conversations) || !Array.isArray(data.contacts) || !Array.isArray(data.messages)) {
+        return false;
+    }
+    
+    // Basic validation of export info (optional but recommended)
+    if (data.exportInfo && typeof data.exportInfo !== 'object') {
+        return false;
+    }
+    
+    return true;
+}
+
+function importDataToRepository(importData) {
+    try {
+        // Check storage quota before importing
+        const estimatedSize = JSON.stringify(importData).length;
+        const availableSpace = getAvailableStorageSpace();
+        
+        if (estimatedSize > availableSpace) {
+            showToast(`❌ Not enough storage space. Estimated size: ${formatBytes(estimatedSize)}, Available: ${formatBytes(availableSpace)}`, 'error', 8000);
+            return;
+        }
+        
+        // Show progress for large imports
+        const totalItems = (importData.conversations?.length || 0) + 
+                          (importData.contacts?.length || 0) + 
+                          (importData.messages?.length || 0);
+        
+        if (totalItems > 100) {
+            showProgressBar();
+            updateProgress(0, totalItems, 'Importing data...');
+        }
+        
+        // Use the MessageRepository's importData method
+        messageRepository.importData(importData);
+        
+        // Hide progress bar if it was shown
+        if (totalItems > 100) {
+            hideProgressBar();
+        }
+        
+        // Clear current conversation since data was cleared
+        currentConversation = null;
+        
+        // Refresh the UI
+        renderConversations();
+        updateStorageStats();
+        
+        // Show success notification
+        showToast(`✅ Successfully imported data!`, 'success', 5000);
+        
+        // Select the first conversation if available
+        const conversations = messageRepository.getAllConversations();
+        if (conversations.length > 0) {
+            selectConversation(conversations[0].phoneNumber);
+        } else {
+            // Clear chat messages if no conversations
+            chatMessages.innerHTML = `
+                <div class="message received">
+                    <div class="message-content">
+                        <p>Import completed. No conversations found in the imported data.</p>
+                        <span class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Update header
+            currentConversationTitle.textContent = 'VMG Thread Viewer';
+            currentConversationStatus.textContent = 'Import completed';
+        }
+        
+    } catch (error) {
+        console.error('Error importing data to repository:', error);
+        showToast('❌ Error importing data. Please try again.', 'error', 5000);
+    }
+}
+
 // Event listeners
 refreshConversationsBtn.addEventListener('click', () => {
     renderConversations();
@@ -630,6 +782,10 @@ console.log('Settings button:', settingsBtn);
 console.log('Close button:', closeSettingsBtn);
 console.log('Delete all button:', deleteAllBtn);
 console.log('Export data button:', exportDataBtn);
+console.log('Import data button:', importDataBtn);
+console.log('Total messages element:', totalMessagesEl);
+console.log('- Total conversations element:', totalConversationsEl);
+console.log('- Total contacts element:', totalContactsEl);
 
 settingsBtn.addEventListener('click', () => {
     console.log('Settings button clicked!');
@@ -650,6 +806,13 @@ exportDataBtn.addEventListener('click', () => {
     console.log('Export data button clicked!');
     exportAllData();
 });
+
+importDataBtn.addEventListener('click', () => {
+    console.log('Import data button clicked!');
+    importAllData();
+});
+
+importFileInput.addEventListener('change', handleImportFileSelect);
 
 // Close settings panel when clicking outside
 document.addEventListener('click', (e) => {
@@ -718,6 +881,40 @@ function sendNotification(message, isSuccess = true) {
     showToast(message, type);
 }
 
+// Storage utility functions
+function getAvailableStorageSpace() {
+    try {
+        // Get current storage usage
+        let currentUsage = 0;
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            const value = localStorage.getItem(key);
+            currentUsage += (key.length + value.length) * 2; // UTF-16 characters are 2 bytes each
+        }
+        
+        // Estimate available space (most browsers have 5-10MB limit)
+        // We'll use a conservative estimate of 5MB
+        const estimatedLimit = 5 * 1024 * 1024; // 5MB
+        const availableSpace = estimatedLimit - currentUsage;
+        
+        return Math.max(0, availableSpace);
+    } catch (error) {
+        console.error('Error checking storage space:', error);
+        // Return a conservative estimate (5MB)
+        return 5 * 1024 * 1024;
+    }
+}
+
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 // Initialize
 console.log('Initializing VMG Thread Viewer...');
 console.log('Settings panel elements found:');
@@ -726,6 +923,7 @@ console.log('- Settings panel:', settingsPanel);
 console.log('- Close button:', closeSettingsBtn);
 console.log('- Delete all button:', deleteAllBtn);
 console.log('- Export data button:', exportDataBtn);
+console.log('- Import data button:', importDataBtn);
 console.log('- Total messages element:', totalMessagesEl);
 console.log('- Total conversations element:', totalConversationsEl);
 console.log('- Total contacts element:', totalContactsEl);
